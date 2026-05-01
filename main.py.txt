@@ -1,0 +1,116 @@
+import os 
+from PIL import Image 
+from cryptography.fernet import Fernet 
+ 
+# Step 1: Ask for image path input 
+def get_image_path(): 
+    path = input("Enter the image path: ") 
+    if not os.path.exists(path): 
+        print("Invalid path. Please try again.") 
+        return get_image_path() 
+    return path 
+ 
+# Step 2: Compress the image 
+def compress_image(input_path): 
+    img = Image.open(input_path) 
+    img_format = img.format  # Preserve the original format 
+    output_path = "compressed_image." + img_format.lower() 
+ 
+    # Compress without major quality loss 
+    img = img.convert("RGB") 
+    img.save(output_path, format=img_format, quality=85, optimize=True) 
+ 
+    print(f"Image compressed and saved as {output_path}") 
+    return output_path 
+ 
+# Step 3: Encrypt the image 
+def encrypt_image(image_path): 
+    # Generate a secure key 
+    key = Fernet.generate_key() 
+    cipher_suite = Fernet(key) 
+ 
+    # Read the compressed image as bytes 
+    with open(image_path, "rb") as file: 
+        image_data = file.read() 
+ 
+    # Encrypt the image data 
+    encrypted_data = cipher_suite.encrypt(image_data) 
+    encrypted_image_path = "encrypted_image.enc" 
+ 
+30  
+    # Write the encrypted data to a new file 
+    with open(encrypted_image_path, "wb") as enc_file: 
+        enc_file.write(encrypted_data) 
+ 
+    print(f"Image encrypted and saved as {encrypted_image_path}") 
+    print(f"Encryption key (save this key for decryption): {key.decode()}") 
+ 
+    return encrypted_image_path, key 
+ 
+# Main function 
+def main(): 
+    # Step 1: Get image path 
+    image_path = get_image_path() 
+ 
+    # Step 2: Compress the image 
+    compressed_image_path = compress_image(image_path) 
+ 
+    # Step 3: Encrypt the image 
+    encrypted_image_path, key = encrypt_image(compressed_image_path) 
+ 
+    # Provide the path to the encrypted image and display the decryption instructions 
+    print("\nEncrypted image saved at:", encrypted_image_path) 
+    print("Use the following key to decrypt the image:", key.decode()) 
+    print("\nTo decrypt the image, run the 'decrypt_image()' function and provide the 
+encrypted image path and key.") 
+ 
+if __name__ == "__main__": 
+    main() 
+ 
+# Step 4: Decrypt the image 
+def decrypt_image(encrypted_image_path, key): 
+    try: 
+        cipher_suite = Fernet(key.encode()) 
+ 
+        # Read the encrypted image data 
+        with open(encrypted_image_path, "rb") as enc_file: 
+            encrypted_data = enc_file.read() 
+ 
+        # Decrypt the image data 
+        decrypted_data = cipher_suite.decrypt(encrypted_data) 
+31  
+        decrypted_image_path = "decrypted_image.jpg" 
+ 
+        # Save the decrypted image 
+        with open(decrypted_image_path, "wb") as dec_file: 
+            dec_file.write(decrypted_data) 
+ 
+        print(f"Image decrypted successfully and saved as {decrypted_image_path}") 
+    except Exception as e: 
+        print(f"Failed to decrypt image: {e}") 
+        print("Ensure you are using the correct key and encrypted image path.") 
+ 
+ 
+# Main function for decryption 
+def main_decrypt(): 
+    # Step 1: Get encrypted image path 
+    encrypted_image_path = input("Enter the path of the encrypted image: ") 
+    key = input("Enter the decryption key: ") 
+ 
+    # Step 2: Decrypt the image 
+    decrypt_image(encrypted_image_path, key) 
+ 
+# Choose whether to encrypt or decrypt 
+if __name__ == "__main__": 
+    print("Choose an option:") 
+    print("1. Encrypt an image") 
+    print("2. Decrypt an image") 
+    choice = input("Enter your choice (1 or 2): ") 
+ 
+    if choice == '1': 
+        main_encrypt() 
+    elif choice == '2': 
+        main_decrypt() 
+    else: 
+        print("Invalid choice. Exiting.") 
+                                                          
